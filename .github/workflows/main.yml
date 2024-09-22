@@ -74,6 +74,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up environment variables
+        run: |
+          echo "Definindo variáveis de ambiente"
+          echo "API_KEY=${{ secrets.API_KEY }}" >> $GITHUB_ENV  # Armazene a chave como um segredo no GitHub
+
       - name: Run Tests
         run: |
           echo "Executando testes automatizados"
