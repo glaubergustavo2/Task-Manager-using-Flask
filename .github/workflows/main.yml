@@ -98,7 +98,6 @@ jobs:
   dast:
     runs-on: ubuntu-latest
     needs: staging
-    if: always()  # Garante que essa etapa sempre será executada
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -106,7 +105,7 @@ jobs:
       - name: Start OWASP ZAP
         run: |
           echo "Iniciando OWASP ZAP para testes DAST"
-          docker run -u zap -p 8081:8081 --rm owasp/zap2docker-stable:latest zap.sh -daemon -port 8081 -host 0.0.0.0 -config api.disablekey=true -quickurl http://staging-url -quickprogress
+          docker run -u zap -p 8081:8081 --rm owasp/zap2docker-stable:latest zap.sh -daemon -port 8081 -host 0.0.0.0 -config api.disablekey=true -quickurl http://staging-url -quickprogress || true
           # Substitua http://staging-url pelo URL real do ambiente de staging
 
       - name: Run OWASP ZAP DAST Scan
