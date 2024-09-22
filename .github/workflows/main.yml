@@ -107,7 +107,7 @@ jobs:
       - name: Start OWASP ZAP
         run: |
           echo "Iniciando OWASP ZAP para testes DAST"
-          docker run -u zap -p 8081:8081 -v /home/aluno/Downloads/ZAP_D-2024-09-17:/home/zap/.ZAP --rm owasp/zap2docker-stable zap.sh -daemon -port 8081 -host 0.0.0.0 -config api.disablekey=true -quickurl http://staging-url -quickprogress
+          docker run -u zap -p 8081:8081 --rm owasp/zap2docker-stable:latest zap.sh -daemon -port 8081 -host 0.0.0.0 -config api.disablekey=true -quickurl http://staging-url -quickprogress
           # Substitua http://staging-url pelo URL real do ambiente de staging
 
       - name: Run OWASP ZAP DAST Scan
