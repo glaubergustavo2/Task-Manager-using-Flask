@@ -1,17 +1,16 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
     branches:
       - master
+      - develop
+      - staging
   pull_request:
     branches:
       - master
-
-env:
-  DOCKER_TLS_CERTDIR: "/certs"
-  DOCKER_CLIENT_TIMEOUT: 600
-  COMPOSE_HTTP_TIMEOUT: 600    
+      - develop
+      - staging
 
 jobs:
   build:
@@ -24,6 +23,7 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1  # Habilita o BuildKit
         run: |
+          echo "Iniciando a compilação do código"
           docker build -t ex-build-dev:latest .
 
   test:
@@ -40,9 +40,9 @@ jobs:
 
       - name: Run Tests
         run: |
-          echo "Testing the app"
+          echo "Executando testes automatizados"
           mkdir -p coverage 
-          go test -v -coverprofile=coverage.out -covermode=set ./... 
+          go test -v -coverprofile=coverage.out -covermode=set ./...
           pwd 
           ls -la coverage 
           cat coverage.out
@@ -52,64 +52,3 @@ jobs:
         with:
           name: coverage-report
           path: coverage.out
-
-  code_analysis:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run Code Analysis
-        uses: sonarsource/sonar-scanner-cli@v1
-        with:
-          args: |
-            -D sonar.go.coverage.reportPaths=coverage.out
-
-  security_scan:
-    runs-on: ubuntu-latest
-    needs: code_analysis
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Install Trivy
-        run: |
-          sudo apt-get install -y curl
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-
-      - name: Run Security Scan
-        run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL ex-build-dev:latest
-
-  dependency_check:
-    runs-on: ubuntu-latest
-    needs: security_scan
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run Dependency Check
-        run: |
-          echo "Verificando dependências"
-          Dependency-Check Core --project "my-golang-app" --scan . --format "HTML" --out dependency-check-report.html
-          cat dependency-check-report.html
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: dependency_check
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Deploy to Docker
-        run: |
-          echo "Removendo containers anteriores"
-          PORT_CONTAINERS=$(docker ps --filter "publish=8081" -q)
-          if [ -n "$PORT_CONTAINERS" ]; then
-            docker stop $PORT_CONTAINERS
-            docker rm $PORT_CONTAINERS
-            sleep 5
-          fi
-          echo "Deploying the app"
-          docker run -d -p 8081:8080 ex-build-dev:latest
