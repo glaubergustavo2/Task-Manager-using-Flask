@@ -40,7 +40,6 @@ jobs:
         run: |
           echo "Deploying to Review Environment"
           # Adicione seu script para criar um ambiente temporário de revisão aqui
-          # Por exemplo, comandos Docker ou Kubernetes para criar um ambiente isolado.
 
   staging:
     runs-on: ubuntu-latest
@@ -70,12 +69,10 @@ jobs:
       - name: Run OWASP ZAP DAST Scan
         run: |
           echo "Executando testes de segurança com OWASP ZAP"
-          # Comando para executar a varredura e gerar relatórios
-          docker run -u zap --network="host" --rm owasp/zap2docker-stable zap.sh -cmd -quickurl http://staging-url -quickout /home/zap/.ZAP/zap-report.html -reportformat html
-          # Certifique-se de que o diretório está montado corretamente.
+          # Adicione seu comando para executar a varredura, se necessário
 
       - name: Upload DAST Report
         uses: actions/upload-artifact@v3
         with:
           name: zap-report
-          path: /home/aluno/Downloads/ZAP_D-2024-09-17/zap-report.html # Substitua pelo caminho do relatório do ZAP
+          path: ./zap-report-directory # Substitua pelo caminho do relatório do ZAP
