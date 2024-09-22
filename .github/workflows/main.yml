@@ -1,1 +1,166 @@
-hola mano 
+name: CI/CD Pipeline Gustavo
+
+on:
+  push:
+    branches:
+      - master       # Produção
+      - staging      # Estágio
+      - develop      # Desenvolvimento
+  pull_request:
+    branches:
+      - master
+      - staging
+      - develop
+
+jobs:
+  montagem:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.19'
+
+      - name: Montar o projeto
+        run: |
+          echo "Executando montagem do projeto"
+          go build ./...
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # ajuste conforme necessário
+
+      - name: Install Bandit
+        run: |
+          pip install bandit
+
+      - name: Run Bandit
+        run: |
+          echo "Executando análise estática com Bandit"
+          bandit -r ./todo_project  # ajuste o caminho conforme necessário
+
+  review:
+    runs-on: ubuntu-latest
+    needs: [montagem, bandit]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Review Environment
+        run: |
+          echo "Deploying to Review Environment"
+          # Adicione seu script para criar um ambiente temporário de revisão aqui
+
+  staging:
+    runs-on: ubuntu-latest
+    needs: review
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying to Staging Environment"
+          # Adicione seu script para implantar no ambiente de staging aqui
+
+  test:
+    runs-on: ubuntu-latest
+    needs: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Tests
+        run: |
+          echo "Executando testes automatizados"
+          mkdir -p coverage 
+          go test -v -coverprofile=coverage.out -covermode=set ./...
+          pwd 
+          ls -la coverage 
+          cat coverage.out
+
+      - name: Upload Test Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.out
+
+  dast:
+    runs-on: ubuntu-latest
+    needs: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Start OWASP ZAP
+        run: |
+          echo "Iniciando OWASP ZAP para testes DAST"
+          docker run -u zap -p 8081:8081 --rm owasp/zap2docker-stable:latest zap.sh -daemon -port 8081 -host 0.0.0.0 -config api.disablekey=true -quickurl http://staging-url -quickprogress || true
+          # Substitua http://staging-url pelo URL real do ambiente de staging
+
+      - name: Run OWASP ZAP DAST Scan
+        run: |
+          echo "Executando testes de segurança com OWASP ZAP"
+          # Adicione seu comando para executar a varredura, se necessário
+
+      - name: Upload DAST Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: ./zap-report-directory # Substitua pelo caminho do relatório do ZAP
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download and Setup OWASP Dependency Check
+        run: |
+          echo "Instalando OWASP Dependency-Check"
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
+          chmod +x dependency-check/bin/dependency-check.sh
+
+      - name: Run OWASP Dependency Check
+        run: |
+          echo "Executando análise de dependências com OWASP Dependency-Check"
+          ./dependency-check/bin/dependency-check.sh --project "Task-Manager" --scan ./ --out ./dependency-check-report
+
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report
+
+  post-deployment-monitoring:
+    runs-on: ubuntu-latest
+    needs: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install and Start ELK Stack
+        run: |
+          echo "Instalando e iniciando ELK Stack para monitoramento"
+          # Adicione os comandos para instalar e iniciar o ELK Stack
+
+      - name: Configure Log Monitoring
+        run: |
+          echo "Configurando monitoramento de logs"
+          # Adicione comandos para configurar o Logstash e os plugins de alerta
+
+      - name: Monitor Application Logs
+        run: |
+          echo "Monitorando logs da aplicação"
+          # Comandos para iniciar o monitoramento dos logs da aplicação e configurar alertas para anomalias
