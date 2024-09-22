@@ -49,22 +49,23 @@ jobs:
           echo "Executando análise estática com Bandit"
           bandit -r ./todo_project  # ajuste o caminho conforme necessário
 
-  dependency-analysis:
-    runs-on: ubuntu-24.04
-    needs: montagem
+  dependency-check:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Install OWASP Dependency Check
+      - name: Download and Setup OWASP Dependency Check
         run: |
-          wget https://github.com/jeremy-long/DependencyCheck/releases/download/v7.5.0/dependency-check-7.5.0-release.zip
-          unzip dependency-check-7.5.0-release.zip
-          sudo mv dependency-check /usr/local/bin/
-          sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
+          echo "Instalando OWASP Dependency-Check"
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
+          chmod +x dependency-check/bin/dependency-check.sh
 
       - name: Run OWASP Dependency Check
         run: |
-          /usr/local/bin/dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe"
+          echo "Executando análise de dependências com OWASP Dependency-Check"
+          ./dependency-check/bin/dependency-check.sh --project "Task-Manager" --scan ./ --out ./dependency-check-report
 
       - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v3
@@ -74,7 +75,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: [montagem, bandit, dependency-analysis]
+    needs: [montagem, bandit, dependency-check]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
