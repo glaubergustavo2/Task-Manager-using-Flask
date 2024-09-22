@@ -13,22 +13,8 @@ on:
       - develop
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Build Docker Image
-        env:
-          DOCKER_BUILDKIT: 1  # Habilita o BuildKit
-        run: |
-          echo "Iniciando a compilação do código"
-          docker build -t ex-build-dev:latest .
-
   test:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -46,3 +32,9 @@ jobs:
           pwd 
           ls -la coverage 
           cat coverage.out
+
+      - name: Upload Test Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: coverage.out
