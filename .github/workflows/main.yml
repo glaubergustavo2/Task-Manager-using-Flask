@@ -75,7 +75,7 @@ jobs:
 
   review:
     runs-on: ubuntu-latest
-    needs: [montagem, bandit, dependency-check]
+    needs: [montagem, bandit]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -132,7 +132,6 @@ jobs:
         run: |
           echo "Instalando e iniciando ELK Stack para monitoramento"
           # Adicione os comandos para instalar e iniciar o ELK Stack
-          # Isso pode incluir iniciar serviços de Elasticsearch, Logstash e Kibana
 
       - name: Configure Log Monitoring
         run: |
