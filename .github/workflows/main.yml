@@ -49,30 +49,6 @@ jobs:
           echo "Executando análise estática com Bandit"
           bandit -r ./todo_project  # ajuste o caminho conforme necessário
 
-  dependency-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download and Setup OWASP Dependency Check
-        run: |
-          echo "Instalando OWASP Dependency-Check"
-          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
-          unzip dependency-check-10.0.4-release.zip
-          chmod +x dependency-check/bin/dependency-check.sh
-
-      - name: Run OWASP Dependency Check
-        run: |
-          echo "Executando análise de dependências com OWASP Dependency-Check"
-          ./dependency-check/bin/dependency-check.sh --project "Task-Manager" --scan ./ --out ./dependency-check-report
-
-      - name: Upload Dependency Check Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: dependency-check-report
-          path: ./dependency-check-report
-
   review:
     runs-on: ubuntu-latest
     needs: [montagem, bandit]
@@ -97,10 +73,32 @@ jobs:
           echo "Deploying to Staging Environment"
           # Adicione seu script para implantar no ambiente de staging aqui
 
+  test:
+    runs-on: ubuntu-latest
+    needs: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Tests
+        run: |
+          echo "Executando testes automatizados"
+          mkdir -p coverage 
+          go test -v -coverprofile=coverage.out -covermode=set ./...
+          pwd 
+          ls -la coverage 
+          cat coverage.out
+
+      - name: Upload Test Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.out
+
   dast:
     runs-on: ubuntu-latest
     needs: staging
-    if: true
+    if: always()  # Garante que essa etapa sempre será executada
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -121,6 +119,30 @@ jobs:
         with:
           name: zap-report
           path: ./zap-report-directory # Substitua pelo caminho do relatório do ZAP
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download and Setup OWASP Dependency Check
+        run: |
+          echo "Instalando OWASP Dependency-Check"
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
+          chmod +x dependency-check/bin/dependency-check.sh
+
+      - name: Run OWASP Dependency Check
+        run: |
+          echo "Executando análise de dependências com OWASP Dependency-Check"
+          ./dependency-check/bin/dependency-check.sh --project "Task-Manager" --scan ./ --out ./dependency-check-report
+
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report
 
   post-deployment-monitoring:
     runs-on: ubuntu-latest
