@@ -29,9 +29,47 @@ jobs:
           echo "Executando montagem do projeto"
           go build ./...
 
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # ajuste conforme necessário
+
+      - name: Install Bandit
+        run: |
+          pip install bandit
+
+      - name: Run Bandit
+        run: |
+          echo "Executando análise estática com Bandit"
+          bandit -r ./todo_project  # ajuste o caminho conforme necessário
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Dependency-Check
+        run: |
+          echo "Instalando OWASP Dependency-Check"
+          wget https://dl.bintray.com/jeremy-long/owasp/dependency-check-dependency-check-7.2.1-release.zip
+          unzip dependency-check-7.2.1-release.zip -d dependency-check
+          chmod +x dependency-check/bin/dependency-check.sh
+
+      - name: Run Dependency-Check
+        run: |
+          echo "Executando análise de dependências com OWASP Dependency-Check"
+          ./dependency-check/bin/dependency-check.sh --project "Seu Projeto" --scan ./todo_project --out ./dependency-check-report
+
   test:
     runs-on: ubuntu-latest
-    needs: montagem
+    needs: [montagem, bandit, dependency-check]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
