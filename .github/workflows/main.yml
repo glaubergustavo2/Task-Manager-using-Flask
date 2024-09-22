@@ -12,8 +12,6 @@ env:
   DOCKER_TLS_CERTDIR: "/certs"
   DOCKER_CLIENT_TIMEOUT: 600
   COMPOSE_HTTP_TIMEOUT: 600    
-  DOCKER_BUILDKIT: 0
-  COMPOSE_DOCKER_CLI_BUILD: 0    
 
 jobs:
   build:
@@ -23,6 +21,8 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build Docker Image
+        env:
+          DOCKER_BUILDKIT: 1  # Habilita o BuildKit
         run: |
           docker build -t ex-build-dev:latest .
 
