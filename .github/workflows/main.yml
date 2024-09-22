@@ -150,17 +150,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install and Start ELK Stack
+      - name: Install Prometheus
         run: |
-          echo "Instalando e iniciando ELK Stack para monitoramento"
-          # Adicione os comandos para instalar e iniciar o ELK Stack
+          echo "Instalando Prometheus"
+          wget https://github.com/prometheus/prometheus/releases/download/v2.42.0/prometheus-2.42.0.linux-amd64.tar.gz
+          tar -xvf prometheus-2.42.0.linux-amd64.tar.gz
+          cd prometheus-2.42.0.linux-amd64
 
-      - name: Configure Log Monitoring
+      - name: Configure Prometheus
         run: |
-          echo "Configurando monitoramento de logs"
-          # Adicione comandos para configurar o Logstash e os plugins de alerta
+          echo "Configurando Prometheus"
+          # Adicione os comandos para editar prometheus.yml conforme necessário
 
-      - name: Monitor Application Logs
+      - name: Start Prometheus
         run: |
-          echo "Monitorando logs da aplicação"
-          # Comandos para iniciar o monitoramento dos logs da aplicação e configurar alertas para anomalias
+          echo "Iniciando Prometheus"
+          ./prometheus --config.file=prometheus.yml &
+
+      - name: Install and Start Alertmanager
+        run: |
+          echo "Instalando e iniciando Alertmanager"
+          wget https://github.com/prometheus/alertmanager/releases/download/v0.24.0/alertmanager-0.24.0.linux-amd64.tar.gz
+          tar -xvf alertmanager-0.24.0.linux-amd64.tar.gz
+          cd alertmanager-0.24.0.linux-amd64
+          echo "Configurando Alertmanager"
+          # Adicione os comandos para editar alertmanager.yml conforme necessário
+          ./alertmanager --config.file=alertmanager.yml &
+
+      - name: Monitor Application Metrics
+        run: |
+          echo "Monitorando métricas da aplicação"
+          # Adicione comandos para iniciar o monitoramento de métricas da aplicação
